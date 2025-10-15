@@ -220,12 +220,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   LineChart,
   Line,
-  AreaChart,
-  Area,
   PieChart,
   Pie,
   Cell,
@@ -240,21 +237,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, DollarSign, Download, Filter } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 
 const DATE_RANGES = {
-  "7D": { label: "7 Days", days: 7 },
-  "1M": { label: "1 Month", days: 30 },
-  "3M": { label: "3 Month", days: 90 },
-  "6M": { label: "6 Month", days: 180 },
-  "1Y": { label: "1 Year", days: 365 },
-  ALL: { label: "All", days: null },
+  "7D": { label: "7D", days: 7 },
+  "1M": { label: "1M", days: 30 },
+  "3M": { label: "3M", days: 90 },
+  "1Y": { label: "1Y", days: 365 },
 };
 
 const CHART_TYPES = {
-  BAR: "bar",
   LINE: "line",
-  AREA: "area",
+  BAR: "bar",
   PIE: "pie",
 };
 
@@ -262,20 +256,17 @@ const COLORS = {
   income: "#10b981",
   expense: "#ef4444",
   net: "#3b82f6",
-  background: "hsl(var(--card))",
-  grid: "hsl(var(--border))",
 };
 
-const CHART_ICONS = {
-  [CHART_TYPES.BAR]: "📊",
-  [CHART_TYPES.LINE]: "📈",
-  [CHART_TYPES.AREA]: "🌊",
-  [CHART_TYPES.PIE]: "🥧",
+const MOBILE_COLORS = {
+  income: "#059669",
+  expense: "#dc2626", 
+  net: "#2563eb",
 };
 
 export function AccountChart({ transactions }) {
   const [dateRange, setDateRange] = useState("1M");
-  const [chartType, setChartType] = useState(CHART_TYPES.AREA);
+  const [chartType, setChartType] = useState(CHART_TYPES.LINE);
 
   const { filteredData, pieData } = useMemo(() => {
     const range = DATE_RANGES[dateRange];
@@ -333,19 +324,21 @@ export function AccountChart({ transactions }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg p-3 space-y-2">
-          <p className="font-semibold text-foreground">{label}</p>
+        <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-xl p-4 space-y-2 min-w-[140px]">
+          <p className="font-semibold text-gray-900 text-sm">{label}</p>
           {payload.map((entry, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-muted-foreground capitalize">
-                {entry.dataKey}:
-              </span>
-              <span className="font-medium text-foreground">
-                ${entry.value.toFixed(2)}
+            <div key={index} className="flex items-center justify-between gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-gray-600 capitalize">
+                  {entry.dataKey}:
+                </span>
+              </div>
+              <span className="font-semibold text-gray-900">
+                ${entry.value?.toFixed(2) || 0}
               </span>
             </div>
           ))}
@@ -358,7 +351,12 @@ export function AccountChart({ transactions }) {
   const renderChart = () => {
     const commonProps = {
       data: filteredData,
-      margin: { top: 10, right: 10, left: 10, bottom: 10 },
+      margin: { 
+        top: 10, 
+        right: window.innerWidth < 768 ? 5 : 10, 
+        left: window.innerWidth < 768 ? 0 : 10, 
+        bottom: window.innerWidth < 768 ? 20 : 10 
+      },
     };
 
     switch (chartType) {
@@ -368,98 +366,54 @@ export function AccountChart({ transactions }) {
             <CartesianGrid 
               strokeDasharray="3 3" 
               vertical={false} 
-              stroke={COLORS.grid}
-              opacity={0.4}
+              stroke="#f1f5f9"
+              opacity={0.6}
             />
             <XAxis
               dataKey="date"
-              fontSize={11}
+              fontSize={window.innerWidth < 768 ? 10 : 11}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))" }}
-              tickMargin={10}
+              tick={{ fill: "#64748b" }}
+              tickMargin={8}
+              interval={window.innerWidth < 768 ? "preserveStartEnd" : 0}
             />
             <YAxis
-              fontSize={11}
+              fontSize={window.innerWidth < 768 ? 10 : 11}
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `$${value}`}
-              tick={{ fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fill: "#64748b" }}
+              width={window.innerWidth < 768 ? 35 : 40}
             />
             <Tooltip content={<CustomTooltip />} />
             <Line
               type="monotone"
               dataKey="income"
               name="Income"
-              stroke={COLORS.income}
-              strokeWidth={3}
+              stroke={window.innerWidth < 768 ? MOBILE_COLORS.income : COLORS.income}
+              strokeWidth={window.innerWidth < 768 ? 2.5 : 3}
               dot={false}
-              activeDot={{ r: 6, strokeWidth: 0 }}
+              activeDot={{ 
+                r: window.innerWidth < 768 ? 4 : 6, 
+                strokeWidth: 0,
+                fill: window.innerWidth < 768 ? MOBILE_COLORS.income : COLORS.income
+              }}
             />
             <Line
               type="monotone"
               dataKey="expense"
               name="Expense"
-              stroke={COLORS.expense}
-              strokeWidth={3}
+              stroke={window.innerWidth < 768 ? MOBILE_COLORS.expense : COLORS.expense}
+              strokeWidth={window.innerWidth < 768 ? 2.5 : 3}
               dot={false}
-              activeDot={{ r: 6, strokeWidth: 0 }}
+              activeDot={{ 
+                r: window.innerWidth < 768 ? 4 : 6, 
+                strokeWidth: 0,
+                fill: window.innerWidth < 768 ? MOBILE_COLORS.expense : COLORS.expense
+              }}
             />
           </LineChart>
-        );
-
-      case CHART_TYPES.AREA:
-        return (
-          <AreaChart {...commonProps}>
-            <defs>
-              <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={COLORS.income} stopOpacity={0.4}/>
-                <stop offset="100%" stopColor={COLORS.income} stopOpacity={0}/>
-              </linearGradient>
-              <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={COLORS.expense} stopOpacity={0.4}/>
-                <stop offset="100%" stopColor={COLORS.expense} stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid 
-              strokeDasharray="3 3" 
-              vertical={false} 
-              stroke={COLORS.grid}
-              opacity={0.4}
-            />
-            <XAxis
-              dataKey="date"
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))" }}
-              tickMargin={10}
-            />
-            <YAxis
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `$${value}`}
-              tick={{ fill: "hsl(var(--muted-foreground))" }}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Area
-              type="monotone"
-              dataKey="income"
-              name="Income"
-              stroke={COLORS.income}
-              fill="url(#incomeGradient)"
-              strokeWidth={2}
-            />
-            <Area
-              type="monotone"
-              dataKey="expense"
-              name="Expense"
-              stroke={COLORS.expense}
-              fill="url(#expenseGradient)"
-              strokeWidth={2}
-            />
-          </AreaChart>
         );
 
       case CHART_TYPES.PIE:
@@ -470,17 +424,24 @@ export function AccountChart({ transactions }) {
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              outerRadius={80}
-              innerRadius={40}
+              label={({ name, percent }) => 
+                window.innerWidth < 768 
+                  ? `${(percent * 100).toFixed(0)}%`
+                  : `${name} ${(percent * 100).toFixed(0)}%`
+              }
+              outerRadius={window.innerWidth < 768 ? 70 : 80}
+              innerRadius={window.innerWidth < 768 ? 30 : 40}
               fill="#8884d8"
               dataKey="value"
             >
               {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={window.innerWidth < 768 ? MOBILE_COLORS[entry.name.toLowerCase()] : entry.color} 
+                />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => [`$${value}`, ""]} />
+            <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, ""]} />
           </PieChart>
         );
 
@@ -490,35 +451,37 @@ export function AccountChart({ transactions }) {
             <CartesianGrid 
               strokeDasharray="3 3" 
               vertical={false} 
-              stroke={COLORS.grid}
-              opacity={0.4}
+              stroke="#f1f5f9"
+              opacity={0.6}
             />
             <XAxis
               dataKey="date"
-              fontSize={11}
+              fontSize={window.innerWidth < 768 ? 10 : 11}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "hsl(var(--muted-foreground))" }}
-              tickMargin={10}
+              tick={{ fill: "#64748b" }}
+              tickMargin={8}
+              interval={window.innerWidth < 768 ? "preserveStartEnd" : 0}
             />
             <YAxis
-              fontSize={11}
+              fontSize={window.innerWidth < 768 ? 10 : 11}
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `$${value}`}
-              tick={{ fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fill: "#64748b" }}
+              width={window.innerWidth < 768 ? 35 : 40}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar
               dataKey="income"
               name="Income"
-              fill={COLORS.income}
+              fill={window.innerWidth < 768 ? MOBILE_COLORS.income : COLORS.income}
               radius={[2, 2, 0, 0]}
             />
             <Bar
               dataKey="expense"
               name="Expense"
-              fill={COLORS.expense}
+              fill={window.innerWidth < 768 ? MOBILE_COLORS.expense : COLORS.expense}
               radius={[2, 2, 0, 0]}
             />
           </BarChart>
@@ -527,78 +490,88 @@ export function AccountChart({ transactions }) {
   };
 
   return (
-    <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+    <Card className="border-0 shadow-sm bg-white/50 backdrop-blur-sm">
       <CardHeader className="pb-4 space-y-4">
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <CardTitle className="text-xl font-bold text-foreground">
+            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
               Financial Overview
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Track your income and expenses over time
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Track your income and expenses
             </p>
           </div>
+          
+          {/* Date Range Selector - Mobile Optimized */}
+          <Select defaultValue={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-full sm:w-[120px] border-gray-200 bg-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(DATE_RANGES).map(([key, { label }]) => (
+                <SelectItem key={key} value={key} className="text-sm">
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/10 rounded-xl p-4 border">
+        {/* Summary Cards - Block on Mobile, Straight Line on Laptop */}
+        <div className="flex flex-col lg:flex-row gap-3">
+          {/* Income Card */}
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 border border-green-200 flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <TrendingUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+              <div className="p-1.5 bg-green-100 rounded-lg">
+                <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600" />
               </div>
-              <span className="text-xs font-medium text-green-700 dark:text-green-300">
+              <span className="text-xs font-medium text-green-700">
                 INCOME
               </span>
             </div>
-            <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+            <p className="text-lg sm:text-xl font-bold text-green-900">
               ${totals.income.toLocaleString()}
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/10 rounded-xl p-4 border">
+          {/* Expense Card */}
+          <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-3 border border-red-200 flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <TrendingDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+              <div className="p-1.5 bg-red-100 rounded-lg">
+                <TrendingDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-red-600" />
               </div>
-              <span className="text-xs font-medium text-red-700 dark:text-red-300">
+              <span className="text-xs font-medium text-red-700">
                 EXPENSES
               </span>
             </div>
-            <p className="text-2xl font-bold text-red-900 dark:text-red-100">
+            <p className="text-lg sm:text-xl font-bold text-red-900">
               ${totals.expense.toLocaleString()}
             </p>
           </div>
 
-          <div className={`bg-gradient-to-br rounded-xl p-4 border ${
+          {/* Net Card */}
+          <div className={`bg-gradient-to-br rounded-xl p-3 border flex-1 ${
             isPositive 
-              ? "from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/10" 
-              : "from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/10"
+              ? "from-blue-50 to-blue-100 border-blue-200" 
+              : "from-orange-50 to-orange-100 border-orange-200"
           }`}>
             <div className="flex items-center gap-2 mb-2">
               <div className={`p-1.5 rounded-lg ${
-                isPositive 
-                  ? "bg-blue-100 dark:bg-blue-900/30" 
-                  : "bg-orange-100 dark:bg-orange-900/30"
+                isPositive ? "bg-blue-100" : "bg-orange-100"
               }`}>
-                <DollarSign className={`h-3.5 w-3.5 ${
-                  isPositive 
-                    ? "text-blue-600 dark:text-blue-400" 
-                    : "text-orange-600 dark:text-orange-400"
+                <DollarSign className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${
+                  isPositive ? "text-blue-600" : "text-orange-600"
                 }`} />
               </div>
               <span className={`text-xs font-medium ${
-                isPositive 
-                  ? "text-blue-700 dark:text-blue-300" 
-                  : "text-orange-700 dark:text-orange-300"
+                isPositive ? "text-blue-700" : "text-orange-700"
               }`}>
                 NET
               </span>
             </div>
-            <p className={`text-2xl font-bold ${
-              isPositive 
-                ? "text-blue-900 dark:text-blue-100" 
-                : "text-orange-900 dark:text-orange-100"
+            <p className={`text-lg sm:text-xl font-bold ${
+              isPositive ? "text-blue-900" : "text-orange-900"
             }`}>
               ${netAmount.toLocaleString()}
             </p>
@@ -606,64 +579,50 @@ export function AccountChart({ transactions }) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">View:</span>
-            <Select defaultValue={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[100px] border-0 bg-muted/50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(DATE_RANGES).map(([key, { label }]) => (
-                  <SelectItem key={key} value={key}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex bg-muted/50 rounded-lg p-1">
+      <CardContent className="space-y-4">
+        {/* Chart Type Selector - Mobile Optimized */}
+        <div className="flex justify-center">
+          <div className="inline-flex bg-gray-100 rounded-lg p-1 gap-1">
             {Object.entries(CHART_TYPES).map(([key, value]) => (
               <Button
                 key={key}
                 variant={chartType === value ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => setChartType(value)}
-                className="px-3 py-1 h-8 text-xs font-medium"
+                className={`px-3 py-1 h-8 text-xs font-medium transition-all ${
+                  chartType === value 
+                    ? "bg-white shadow-sm border border-gray-200" 
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
               >
-                <span className="mr-1.5">{CHART_ICONS[value]}</span>
                 {value.charAt(0).toUpperCase() + value.slice(1)}
               </Button>
             ))}
           </div>
         </div>
 
-        {/* Chart */}
-        <div className="h-[400px] rounded-lg border bg-background/50 p-4">
+        {/* Chart Container */}
+        <div className="h-[300px] sm:h-[350px] lg:h-[400px] rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
           <ResponsiveContainer width="100%" height="100%">
             {renderChart()}
           </ResponsiveContainer>
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-6 text-sm">
+        {/* Legend - Simplified for Mobile */}
+        <div className="flex items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
             <div 
-              className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: COLORS.income }}
+              className="w-2 h-2 sm:w-3 sm:h-3 rounded-full" 
+              style={{ backgroundColor: window.innerWidth < 768 ? MOBILE_COLORS.income : COLORS.income }}
             />
-            <span className="text-muted-foreground">Income</span>
+            <span className="text-gray-600">Income</span>
           </div>
           <div className="flex items-center gap-2">
             <div 
-              className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: COLORS.expense }}
+              className="w-2 h-2 sm:w-3 sm:h-3 rounded-full" 
+              style={{ backgroundColor: window.innerWidth < 768 ? MOBILE_COLORS.expense : COLORS.expense }}
             />
-            <span className="text-muted-foreground">Expenses</span>
+            <span className="text-gray-600">Expenses</span>
           </div>
         </div>
       </CardContent>

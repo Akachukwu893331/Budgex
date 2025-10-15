@@ -17,93 +17,147 @@ export const PREVIEW_DATA = {
     userName: "",
     type: "monthly-report",
     data: {
-      
+     
     },
   },
   budgetAlert: {
     userName: "",
     type: "budget-alert",
     data: {
-      
     },
   },
 };
 
 /** -----------------------------
- * ✅ Email Template Component
+ * ✅ Helper Function
+ * ----------------------------- */
+function formatAmount(num = 0) {
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+}
+
+/** -----------------------------
+ * ✅ Redesigned Email Template
  * ----------------------------- */
 export default function EmailTemplate({
   userName = "",
   type = "monthly-report",
   data = {},
 }) {
-  const stats = data?.stats || {
-    totalIncome: 0,
-    totalExpenses: 0,
-    byCategory: {},
-  };
-  const insights = data?.insights || [];
-  const month = data?.month || "this month";
-
   /** ========== MONTHLY REPORT ========== */
   if (type === "monthly-report") {
+    const stats = data.stats || {};
+    const month = data.month || "this month";
+    const insights = data.insights || [];
+    const net = stats.totalIncome - stats.totalExpenses;
+
     return (
       <Html>
         <Head />
-        <Preview>Your Monthly Financial Report</Preview>
+        <Preview>{`Your ${month} Financial Summary`}</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>Monthly Financial Report</Heading>
-
-            <Text style={styles.text}>Hello {userName || "User"},</Text>
-            <Text style={styles.text}>
-              Here’s your financial summary for {month}:
-            </Text>
-
-            <Section style={styles.statsContainer}>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Total Income</Text>
-                <Text style={styles.heading}>${stats.totalIncome}</Text>
-              </div>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Total Expenses</Text>
-                <Text style={styles.heading}>${stats.totalExpenses}</Text>
-              </div>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Net</Text>
-                <Text style={styles.heading}>
-                  ${stats.totalIncome - stats.totalExpenses}
-                </Text>
-              </div>
+            {/* HEADER */}
+            <Section style={styles.headerSection}>
+              <Heading style={styles.headerTitle}>📊 Monthly Report</Heading>
+              <Text style={styles.headerMonth}>{month}</Text>
             </Section>
 
-            {Object.keys(stats.byCategory).length > 0 && (
-              <Section style={styles.section}>
-                <Heading style={styles.heading}>Expenses by Category</Heading>
-                {Object.entries(stats.byCategory).map(([category, amount]) => (
-                  <div key={category} style={styles.row}>
-                    <Text style={styles.text}>{category}</Text>
-                    <Text style={styles.text}>${amount}</Text>
-                  </div>
-                ))}
-              </Section>
-            )}
+            {/* GREETING */}
+            <Section style={styles.content}>
+              <Text style={styles.greeting}>Hi {userName || "there"},</Text>
+              <Text style={styles.subtitle}>
+                Here's your financial overview for this month:
+              </Text>
 
-            {insights.length > 0 && (
-              <Section style={styles.section}>
-                <Heading style={styles.heading}>Welth Insights</Heading>
-                {insights.map((insight, index) => (
-                  <Text key={index} style={styles.text}>
-                    • {insight}
+              {/* SUMMARY CARDS */}
+              <div style={styles.summaryRow}>
+                <div style={{ ...styles.card, ...styles.income }}>
+                  <Text style={styles.cardTitle}>Total Income</Text>
+                  <Text style={styles.cardValue}>
+                    ${formatAmount(stats.totalIncome)}
                   </Text>
-                ))}
-              </Section>
-            )}
+                  <Text style={styles.cardNote}>💰 Stable Growth</Text>
+                </div>
 
-            <Text style={styles.footer}>
-              Thank you for using <strong>Welth</strong>. Keep tracking your
-              finances for better financial health!
-            </Text>
+                <div style={{ ...styles.card, ...styles.expense }}>
+                  <Text style={styles.cardTitle}>Total Expenses</Text>
+                  <Text style={styles.cardValue}>
+                    ${formatAmount(stats.totalExpenses)}
+                  </Text>
+                  <Text style={styles.cardNote}>📉 Controlled Spending</Text>
+                </div>
+
+                <div
+                  style={{
+                    ...styles.card,
+                    ...(net >= 0 ? styles.surplus : styles.deficit),
+                  }}
+                >
+                  <Text style={styles.cardTitle}>Net Balance</Text>
+                  <Text
+                    style={{
+                      ...styles.cardValue,
+                      color: net >= 0 ? "#10b981" : "#ef4444",
+                    }}
+                  >
+                    ${formatAmount(net)}
+                  </Text>
+                  <Text style={styles.cardNote}>
+                    {net >= 0 ? "✅ Surplus" : "⚠️ Over budget"}
+                  </Text>
+                </div>
+              </div>
+
+              {/* SPENDING BREAKDOWN */}
+              {Object.keys(stats.byCategory || {}).length > 0 && (
+                <Section style={styles.breakdownSection}>
+                  <Text style={styles.sectionHeading}>Spending Breakdown</Text>
+                  {Object.entries(stats.byCategory).map(([cat, amount]) => (
+                    <div key={cat} style={styles.categoryItem}>
+                      <div style={styles.categoryHeader}>
+                        <Text style={styles.categoryName}>{cat}</Text>
+                        <Text style={styles.categoryAmount}>
+                          ${formatAmount(amount)}
+                        </Text>
+                      </div>
+                      <div style={styles.progressBar}>
+                        <div
+                          style={{
+                            ...styles.progressFill,
+                            width: `${
+                              (amount / stats.totalExpenses) * 100
+                            }%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </Section>
+              )}
+
+              {/* INSIGHTS */}
+              {insights.length > 0 && (
+                <Section>
+                  <Text style={styles.sectionHeading}>Smart Insights</Text>
+                  {insights.map((tip, i) => (
+                    <div key={i} style={styles.tipBox}>
+                      <Text style={styles.tipIcon}>💡</Text>
+                      <Text style={styles.tipText}>{tip}</Text>
+                    </div>
+                  ))}
+                </Section>
+              )}
+
+              {/* FOOTER */}
+              <Section style={styles.footer}>
+                <Text style={styles.footerText}>
+                  Stay in control with <strong>Budgex</strong>.
+                </Text>
+              </Section>
+            </Section>
           </Container>
         </Body>
       </Html>
@@ -112,46 +166,90 @@ export default function EmailTemplate({
 
   /** ========== BUDGET ALERT ========== */
   if (type === "budget-alert") {
-    const budgetAmount = data?.budgetAmount || 0;
-    const totalExpenses = data?.totalExpenses || 0;
-    const percentageUsed =
-      data?.percentageUsed ??
-      (budgetAmount > 0 ? (totalExpenses / budgetAmount) * 100 : 0);
+    const { budgetAmount = 0, totalExpenses = 0, percentageUsed = 0 } = data;
+    const remaining = budgetAmount - totalExpenses;
+    const over = remaining < 0;
 
     return (
       <Html>
         <Head />
-        <Preview>Budget Alert</Preview>
+        <Preview>⚠️ Budget Alert: {percentageUsed}% Used</Preview>
         <Body style={styles.body}>
           <Container style={styles.container}>
-            <Heading style={styles.title}>Budget Alert</Heading>
-            <Text style={styles.text}>Hello {userName || "User"},</Text>
-            <Text style={styles.text}>
-              You’ve used {percentageUsed.toFixed(1)}% of your monthly budget.
-            </Text>
-
-            <Section style={styles.statsContainer}>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Budget Amount</Text>
-                <Text style={styles.heading}>${budgetAmount}</Text>
-              </div>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Spent So Far</Text>
-                <Text style={styles.heading}>${totalExpenses}</Text>
-              </div>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Remaining</Text>
-                <Text style={styles.heading}>
-                  ${budgetAmount - totalExpenses}
-                </Text>
-              </div>
+            {/* HEADER */}
+            <Section style={styles.alertHeader}>
+              <Heading style={styles.headerTitle}>⚠️ Budget Alert</Heading>
+              <Text style={styles.alertSubtitle}>
+                {percentageUsed}% of your budget is already used!
+              </Text>
             </Section>
 
-            <Text style={styles.footer}>
-              Stay mindful of your spending to stay within your goals.
-              <br />
-              Keep up the good work with <strong>Welth</strong>!
-            </Text>
+            {/* SUMMARY */}
+            <Section style={styles.content}>
+              <div style={styles.alertRow}>
+                <div style={{ ...styles.card, ...styles.expense }}>
+                  <Text style={styles.cardTitle}>Total Budget</Text>
+                  <Text style={styles.cardValue}>
+                    ${formatAmount(budgetAmount)}
+                  </Text>
+                </div>
+                <div style={{ ...styles.card, ...styles.income }}>
+                  <Text style={styles.cardTitle}>Spent</Text>
+                  <Text style={styles.cardValue}>
+                    ${formatAmount(totalExpenses)}
+                  </Text>
+                </div>
+                <div
+                  style={{
+                    ...styles.card,
+                    ...(over ? styles.deficit : styles.surplus),
+                  }}
+                >
+                  <Text style={styles.cardTitle}>
+                    {over ? "Over Budget" : "Remaining"}
+                  </Text>
+                  <Text
+                    style={{
+                      ...styles.cardValue,
+                      color: over ? "#ef4444" : "#10b981",
+                    }}
+                  >
+                    ${formatAmount(Math.abs(remaining))}
+                  </Text>
+                </div>
+              </div>
+
+              {/* PROGRESS BAR */}
+              <Section style={{ marginTop: "20px" }}>
+                <Text style={styles.sectionHeading}>Budget Usage</Text>
+                <div style={styles.progressBar}>
+                  <div
+                    style={{
+                      ...styles.progressFill,
+                      width: `${percentageUsed}%`,
+                      backgroundColor: over ? "#ef4444" : "#3b82f6",
+                    }}
+                  />
+                </div>
+                <Text
+                  style={{
+                    textAlign: "right",
+                    fontSize: "12px",
+                    color: over ? "#ef4444" : "#6b7280",
+                    marginTop: "4px",
+                  }}
+                >
+                  {percentageUsed}% used
+                </Text>
+              </Section>
+
+              {/* FOOTER */}
+              <Section style={styles.footer}>
+                <Text style={styles.footerText}>
+                  Keep your budget on track with <strong>Budgex</strong>.
+                </Text>
+              </Section>
+            </Section>
           </Container>
         </Body>
       </Html>
@@ -162,81 +260,116 @@ export default function EmailTemplate({
 }
 
 /** -----------------------------
- * ✅ Shared Styles
+ * ✅ Styles (modern minimal look)
  * ----------------------------- */
 const styles = {
   body: {
-    backgroundColor: "#f6f9fc",
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    backgroundColor: "#f3f4f6",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+    padding: "40px 0",
   },
   container: {
-    backgroundColor: "#ffffff",
+    maxWidth: "640px",
+    backgroundColor: "#fff",
+    borderRadius: "16px",
+    overflow: "hidden",
     margin: "0 auto",
-    padding: "20px",
-    borderRadius: "5px",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-    maxWidth: "600px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
   },
-  title: {
-    color: "#1f2937",
-    fontSize: "28px",
-    fontWeight: "bold",
+  headerSection: {
+    background: "linear-gradient(120deg, #4f46e5, #7c3aed)",
+    color: "white",
     textAlign: "center",
-    margin: "0 0 20px",
+    padding: "40px 20px",
   },
-  heading: {
-    color: "#1f2937",
-    fontSize: "18px",
-    fontWeight: "600",
-    margin: "0 0 12px",
-  },
-  text: {
-    color: "#4b5563",
+  headerTitle: { fontSize: "26px", marginBottom: "6px" },
+  headerMonth: { fontSize: "15px", opacity: 0.9 },
+  content: { padding: "30px" },
+  greeting: { fontSize: "18px", fontWeight: 600, color: "#111827" },
+  subtitle: {
     fontSize: "15px",
-    margin: "0 0 12px",
-    lineHeight: "1.5",
+    color: "#6b7280",
+    marginBottom: "25px",
   },
-  section: {
-    marginTop: "24px",
+  summaryRow: {
+    display: "flex",
+    gap: "15px",
+    flexWrap: "wrap",
+    marginBottom: "30px",
+  },
+  alertRow: { display: "flex", gap: "15px", flexWrap: "wrap" },
+  card: {
+    flex: 1,
+    backgroundColor: "#fafafa",
+    borderRadius: "10px",
     padding: "16px",
-    backgroundColor: "#f9fafb",
-    borderRadius: "5px",
     border: "1px solid #e5e7eb",
   },
-  statsContainer: {
-    margin: "24px 0",
-    padding: "16px",
-    backgroundColor: "#f9fafb",
-    borderRadius: "5px",
+  income: { borderTop: "4px solid #10b981" },
+  expense: { borderTop: "4px solid #ef4444" },
+  surplus: { borderTop: "4px solid #10b981" },
+  deficit: { borderTop: "4px solid #ef4444" },
+  cardTitle: { fontSize: "13px", color: "#6b7280", textTransform: "uppercase" },
+  cardValue: { fontSize: "22px", fontWeight: 700, color: "#111827" },
+  cardNote: { fontSize: "12px", color: "#6b7280", marginTop: "4px" },
+  breakdownSection: { marginBottom: "24px" },
+  sectionHeading: {
+    fontSize: "16px",
+    fontWeight: 600,
+    color: "#111827",
+    marginBottom: "10px",
   },
-  stat: {
-    marginBottom: "12px",
-    padding: "12px",
-    backgroundColor: "#fff",
-    borderRadius: "4px",
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-  },
-  row: {
+  categoryItem: { marginBottom: "10px" },
+  categoryHeader: {
     display: "flex",
     justifyContent: "space-between",
-    padding: "8px 0",
-    borderBottom: "1px solid #e5e7eb",
+    marginBottom: "4px",
+  },
+  categoryName: { fontSize: "14px", color: "#374151" },
+  categoryAmount: { fontSize: "14px", fontWeight: 600, color: "#111827" },
+  progressBar: {
+    backgroundColor: "#e5e7eb",
+    height: "6px",
+    borderRadius: "3px",
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "6px",
+    backgroundColor: "#3b82f6",
+    borderRadius: "3px",
+  },
+  tipBox: {
+    backgroundColor: "#f9fafb",
+    borderRadius: "8px",
+    padding: "10px 12px",
+    display: "flex",
+    gap: "10px",
+    marginBottom: "8px",
+  },
+  tipIcon: { fontSize: "16px" },
+  tipText: { fontSize: "14px", color: "#374151" },
+  alertHeader: {
+    backgroundColor: "#fef2f2",
+    textAlign: "center",
+    padding: "40px 20px",
+    borderBottom: "1px solid #fee2e2",
+  },
+  alertSubtitle: {
+    fontSize: "14px",
+    color: "#b91c1c",
+    marginTop: "6px",
   },
   footer: {
-    color: "#6b7280",
-    fontSize: "13px",
-    textAlign: "center",
-    marginTop: "24px",
-    paddingTop: "16px",
+    marginTop: "30px",
     borderTop: "1px solid #e5e7eb",
+    paddingTop: "16px",
+  },
+  footerText: {
+    textAlign: "center",
+    fontSize: "13px",
+    color: "#6b7280",
   },
 };
 
-/** -----------------------------
- * ✅ Choose which dummy data to preview
- * ----------------------------- */
-// Toggle this line to test either email in React Email dev preview:
-
-
-// Or test the other one:
-// EmailTemplate.PreviewProps = PREVIEW_DATA.budgetAlert;
+/** Default Preview */
+//EmailTemplate.PreviewProps = PREVIEW_DATA.monthlyReport;

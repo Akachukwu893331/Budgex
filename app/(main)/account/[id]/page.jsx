@@ -15,44 +15,80 @@ export default async function AccountPage({ params }) {
   const { transactions, ...account } = accountData;
 
   return (
-    <div className="space-y-8 px-5">
-      <div className="flex gap-4 items-end justify-between">
-        <div>
-          <h1 className="text-5xl sm:text-6xl font-bold tracking-tight gradient-title capitalize">
-            {account.name}
-          </h1>
-          <p className="text-muted-foreground">
-            {account.type.charAt(0) + account.type.slice(1).toLowerCase()}{" "}
-            Account
-          </p>
-        </div>
-
-        <div className="text-right pb-2">
-          <div className="text-xl sm:text-2xl font-bold">
-            ${parseFloat(account.balance).toFixed(2)}
+    <div className="min-h-screen bg-gray-50/30">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+                <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                  {account.type.charAt(0) + account.type.slice(1).toLowerCase()} Account
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 truncate">
+                {account.name}
+              </h1>
+            </div>
+            
+            <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-4 sm:p-6 border border-gray-200/60 shadow-sm">
+              <div className="text-right">
+                <p className="text-sm text-gray-500 mb-1">Current Balance</p>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  ${parseFloat(account.balance).toFixed(2)}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  {account._count.transactions} transactions
+                </p>
+              </div>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {account._count.transactions} Transactions
-          </p>
         </div>
       </div>
 
-      {/* Chart Section */}
-      <Suspense
-        fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
-      >
-        <AccountChart transactions={transactions} />
-      </Suspense>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          {/* Chart Section */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Balance Trend</h2>
+              <p className="text-sm text-gray-500">transaction overview</p>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-6">
+              <Suspense 
+                fallback={
+                  <div className="h-80 flex items-center justify-center">
+                    <BarLoader width={"80%"} color="#6366f1" />
+                  </div>
+                }
+              >
+                <AccountChart transactions={transactions} />
+              </Suspense>
+            </div>
+          </section>
 
-      {/* Transactions Table */}
-      <Suspense
-        fallback={<BarLoader className="mt-4" width={"100%"} color="#9333ea" />}
-      >
-        <TransactionTable transactions={transactions} />
-      </Suspense>
+          {/* Transactions Section */}
+          <section>
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Transaction History</h2>
+              <p className="text-sm text-gray-500"> account activities</p>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+              <Suspense 
+                fallback={
+                  <div className="h-40 flex items-center justify-center">
+                    <BarLoader width={"80%"} color="#6366f1" />
+                  </div>
+                }
+              >
+                <TransactionTable transactions={transactions} />
+              </Suspense>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
-
-
-
